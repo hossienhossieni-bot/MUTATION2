@@ -1,0 +1,466 @@
+
+#The first program calculates a significant result of 0.000001559657435
+#the probability of finding the particle on the right side of the well.
+#It also compares two assumed potentials
+#and plots the probability of finding the particle in the first 25 states 
+#during a non-adiabatic transition process. 
+import numpy as np
+import scipy.linalg as LA
+from matplotlib import pyplot as plt
+
+# Constants
+hbar = 1
+m = 1
+N = 10000
+L = 3.0
+x = np.linspace(-L/2, L/2., N)
+h = x[1] - x[0]
+
+# Prevent singularities in tan(x) and cos(x)
+epsilon = 1e-6
+x = np.clip(x, -np.pi/2 + epsilon, np.pi/2 - epsilon)
+
+hh = 70.0
+cc = np.sqrt(hh)
+bb = 0
+aa = 300
+
+# Potential Definition (Corrected)
+Vnew = 8065.73 * ((hh * np.tan(x)**2 + cc * (np.sin(x)/(np.cos(x)**2)) - bb * (np.sin(x)**2) + aa * np.sin(x) + 830.0)/900) - 6000
+Vnew = np.real(Vnew)
+
+# Second derivative matrix (finite difference)
+Mdd = 1./(h*h) * (np.diag(np.ones(N-1), -1) - 2 * np.diag(np.ones(N), 0) + np.diag(np.ones(N-1), 1))
+
+# Hamiltonian
+H = -(hbar * hbar) / (2.0 * m) * Mdd + np.diag(Vnew)
+
+# Eigenvalue problem
+En, psi_nT = np.linalg.eigh(H)
+psi_n = np.transpose(psi_nT)
+
+# Normalization function
+def normalize_wavefunctions(psi, h):
+    for i in range(len(psi)):
+        norm = np.sqrt(np.sum(np.abs(psi[i])**2) * h)
+        if norm != 0:
+            psi[i] /= norm
+    return psi
+
+# Normalize the original wavefunctions
+psi_n_normalized = normalize_wavefunctions(psi_n, h)
+
+# Fitted potential
+Vfit = 8065.73 * (-4464.49 + (0.429 * x) - (1.123 * x**2) - (0.143 * x**3) + (0.563 * x**4)) + (3.601e7) + 6200
+Vfit = np.real(Vfit)
+
+# Hamiltonian for fitted potential
+H = -(hbar * hbar) / (2.0 * m) * Mdd + np.diag(Vfit)
+
+# Eigenvalue problem for fitted potential
+En_fit, psiT = np.linalg.eigh(H)
+psi = np.transpose(psiT)
+
+# Normalize the wavefunctions
+psi_normalized = normalize_wavefunctions(psi, h)
+
+# Check normalization
+for i in range(5):
+    norm_check_psi_n = np.sum(np.abs(psi_n_normalized[i])**2) * h
+    norm_check_psi = np.sum(np.abs(psi_normalized[i])**2) * h
+    print(f"Normalization check for psi_n[{i}]: {norm_check_psi_n:.10f}")
+    print(f"Normalization check for psi[{i}]: {norm_check_psi:.10f}")
+
+# Plot scaled potentials
+scaling_factor = 10
+Vnew_scaled = scaling_factor * Vnew
+Vfit_scaled = scaling_factor * Vfit
+
+plt.plot(x, Vnew_scaled, label="Original Potential Vnew (Scaled)", color='blue')
+plt.plot(x, Vfit_scaled, label="Fitted Potential Vfit (Scaled)", color='red')
+plt.xlim(-L/2, L/2)
+plt.ylim(0, 80000)
+plt.xlabel("x")
+plt.legend()
+plt.title("Comparison of Scaled Potentials with Larger Variation")
+plt.show()
+
+# Project wavefunctions onto the right side
+x_right_indices = np.where(x > 0)[0]
+psi_n_right = psi_n_normalized[:, x_right_indices]
+psi_right = psi_normalized[:, x_right_indices]
+
+# Expansion coefficients
+coefficients = np.zeros(100)
+for i in range(100):
+    coefficients[i] = np.sum(psi_n_normalized[i] * psi_normalized[0] * h)
+
+# Reconstruct the wavefunction
+psi_reconstructed_right = np.zeros_like(psi_right[0])
+for i in range(100):
+    psi_reconstructed_right += coefficients[i] * psi_right[i]
+
+# Probability on the right side
+probability_right = np.sum(np.abs(psi_reconstructed_right)**2) * h
+print(f"Probability of finding the particle on the right side: {probability_right:.15f}")
+n_states = 25
+probabilities = np.zeros(n_states)
+
+for n in range(n_states):
+    c_n = np.sum(psi_normalized[n] * psi_n_normalized[0] * h)
+    probabilities[n] = np.abs(c_n)**2
+
+# Plot the probability distribution
+plt.figure(figsize=(6, 4))
+plt.plot(range(n_states), probabilities, 'o-', color='purple', label=r'$|c_n|^2$')
+
+
+plt.xlabel(r'$n$ \text{--} states', fontsize=12)
+
+plt.ylabel(r'$probability$', fontsize=12)
+plt.title("Probability of Finding Proton in First 25 Eigenstates")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+#########
+#########
+#########
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Disable LaTeX to avoid errors
+plt.rcParams.update({
+    'font.size': 14,
+    'text.usetex': False,  # Critical fix
+    'font.family': 'sans-serif',
+    'axes.labelsize': 16,
+    'legend.fontsize': 12,
+})
+
+# Atomic units and potential setup (unchanged)
+hbar = 1.0
+m = 1.0
+w = 1.0
+N = 2500
+L = 3.0
+x = np.linspace(-L/2., L/2., N)
+h = x[1] - x[0]
+
+hh = 70.0
+cc = np.sqrt(hh)
+bb = 850.0
+aa = 300
+Vnew = 8065.73 * ((hh * np.tan(x)**2 + cc * (np.sin(x)/(np.cos(x)**2)) - bb * (np.sin(x)**2) + aa * np.sin(x) + 830.0)/900) - 1000
+
+Mdd = 1./(h*h) * (np.diag(np.ones(N-1), -1) - 2 * np.diag(np.ones(N), 0) + np.diag(np.ones(N-1), 1))
+H = -(hbar*hbar) / (2.0*m) * Mdd + np.diag(Vnew)
+
+En, psiT = np.linalg.eigh(H)
+psi = np.transpose(psiT)
+
+# Plot setup
+fig, ax = plt.subplots(figsize=(6, 6.7), dpi=100)
+V_scaled = 0.005 * Vnew
+ax.plot(x, V_scaled, color="black", linestyle='--', label="Scaled Potential")
+
+# Plot eigenfunctions
+offset = 1.0
+lines = []
+labels = []
+for i in range(30):
+    if psi[i][N//8] < 0:
+        line, = ax.plot(x, -psi[i]/np.sqrt(h) + offset, linewidth=1.2)
+    else:
+        line, = ax.plot(x, psi[i]/np.sqrt(h) + offset, linewidth=1.2)
+    offset += 1.0
+    labels.append(f"E_{i} = {En[i]:3.1f}")
+    lines.append(line)
+
+ax.set_ylim((-5, 35))
+ax.set_xlim((-1.5, 1.5))
+ax.set_ylabel(r'$\psi(\zeta)$ + Offset')
+ax.set_xlabel(r'$\zeta$')
+
+
+# Legend outside with 2 columns
+ax.legend(lines[::-1], labels[::-1], loc='center left', bbox_to_anchor=(1.05, 0.5), ncol=2, frameon=False)
+plt.tight_layout(rect=[0, 0, 0.8, 1])
+
+plt.savefig("Eigenfunctions_NoLaTeX.pdf", bbox_inches='tight', dpi=300)
+plt.show()
+###########
+###########
+###########
+##The second program plots the first thirty eigenfunctions."
+#####
+import math
+import numpy as np
+import scipy.integrate as integrate
+import scipy.special as special
+from numpy import linalg as LA
+import matplotlib.pyplot as plt
+import numpy.polynomial.hermite as Herm
+import scipy.integrate as integrate
+
+plt.rcParams.update({'font.size': 22})
+
+hbar = 1
+m = 1
+N = 2500
+L = 3.0
+x = np.linspace(-L/2, L/2., N)
+h = x[1] - x[0]
+hh = 70.0
+cc = np.sqrt(hh)
+bb = 0
+aa = 300
+
+Vnew = 8065.73 * ((hh * np.tan(x)**2 + cc * (np.sin(x) / (np.cos(x)**2))
+         - bb * (np.sin(x)**2) + aa * np.sin(x) + 830.0) / 900) - 6000
+
+Mdd = 1. / (h * h) * (np.diag(np.ones(N-1), -1) - 2 * np.diag(np.ones(N), 0)
+                     + np.diag(np.ones(N-1), 1))
+
+H = -(hbar * hbar) / (2.0 * m) * Mdd + np.diag(Vnew)
+
+En, psi_nT = np.linalg.eigh(H)
+psi_n = np.transpose(psi_nT)
+
+norm2 = LA.norm(psi_nT * psi_n)
+
+Vfit = 8065.73 * (-4464.49 + (0.429 * x) - (1.123 * x**2)
+        - (0.143 * x**3) + (0.563 * x**4)) + (3.601 * 10**7) + 6200
+
+Mdd = 1. / (h * h) * (np.diag(np.ones(N-1), -1) - 2 * np.diag(np.ones(N), 0)
+                     + np.diag(np.ones(N-1), 1))
+
+H = -(hbar * hbar) / (2.0 * m) * Mdd + np.diag(Vfit)
+
+En, psiT = np.linalg.eigh(H)
+psi = np.transpose(psiT)
+
+norm4 = LA.norm(psiT * psi)
+
+product = np.zeros(100)
+for i in range(0, 100):
+    product[i] += np.dot(psi[0], psi_n[i])
+
+for r in product:
+    print(r**2)
+
+sum = 0
+for i in range(0, 100):
+    sum = sum + (product[i])**2
+
+print("sum=", sum)
+print(product**2)
+
+n = np.linspace(0, 100, 100)
+fig2 = plt.figure(figsize=[12, 8])
+plt.ylabel('$probability$')
+plt.xlabel('$n-states$')
+plt.ylim((0, 1e-6))
+plt.xlim((26, 60))
+plt.plot(n, product**2, 'purple')
+plt.plot(n, product**2, 'o')
+plt.legend()
+plt.savefig("probability3.jpg")
+plt.show()
+######
+######
+######
+
+##The third program plots the first thirty eigenfunctions during the non-adiabatic process.
+import numpy as np
+import numpy.linalg as LA
+import matplotlib.pyplot as plt
+
+# Constants
+hbar = 1  # Planck's constant in eV.s
+m = 1     # mass
+w = 1     # Omega
+
+# Parameters
+N = 2500
+L = 3.0
+zeta = np.linspace(-L/2., L/2., N)
+h = zeta[1] - zeta[0]
+
+# Define the potential
+hh = 70.0
+cc = np.sqrt(hh)
+bb = 0
+aa = 300
+Vnew = 8065.73 * ((hh * np.tan(zeta)**2 + cc * (np.sin(zeta) / (np.cos(zeta)**2)) - bb * (np.sin(zeta)**2) + aa * np.sin(zeta) + 830.0) / 900) - 6000
+
+# Construct the Hamiltonian
+Mdd = 1. / (h * h) * (np.diag(np.ones(N-1), -1) - 2 * np.diag(np.ones(N), 0) + np.diag(np.ones(N-1), 1))
+H = -(hbar**2) / (2.0 * m) * Mdd + np.diag(Vnew)
+En, psi_nT = np.linalg.eigh(H)
+psi_n = np.transpose(psi_nT)
+
+# Sort the energies and eigenfunctions
+sorted_indices = np.argsort(En)  # Indices of the sorted eigenvalues
+En_sorted = En[sorted_indices]   # Sorted eigenvalues
+psi_n_sorted = psi_n[sorted_indices]  # Corresponding sorted eigenfunctions
+
+# Check normalization
+norm4 = LA.norm(psi_nT @ psi_n)
+print(f"Normalization check (psi): {norm4}")
+
+norm5 = LA.norm(psi_nT[1] @ psi_n[1])
+print(f"Normalization check (psi[1]): {norm5}")
+
+# Projection of wavefunctions
+product_wave = np.zeros(100)
+for i in range(0, 100):
+    product_wave[i] = (np.dot(psi_n_sorted[0], psi_n_sorted[i]))**2
+
+kk = np.dot(psi_n_sorted[1], psi_n_sorted[1])**2
+print(f"Projection of psi[1] onto psi_n[1]: {kk}")
+
+# Plotting 30 eigenfunctions in one figure with separation
+plt.figure(figsize=[12, 10])
+plt.title('First 30 Eigenfunctions (Sorted by Energy)')
+plt.ylabel('$\psi(\zeta)$')
+plt.xlabel('$\zeta$')
+
+# Plot the potential curve
+plt.plot([0, 0], [-6, Vnew[0]], color="blue")
+plt.plot([-L/2., L/2.], [0, 0], color="blue")
+plt.plot(zeta, 0.001 * Vnew - 4, color="grey", label="V($\zeta$) scaled by 0.001")
+
+# Define a separation factor
+separation = 2.0
+
+# Plot the first 30 sorted eigenfunctions with reversed order for legend
+for idx in range(29, -1, -1):  # Start from the highest energy and go down
+    offset = idx * separation  # Vertical offset for each eigenfunction
+    if psi_n_sorted[idx][N // 8] < 0:
+        plt.plot(zeta, -psi_n_sorted[idx] / np.sqrt(h) + offset, label=f"$E_{{{idx}}}$={En_sorted[idx]:3.1f}")
+    else:
+        plt.plot(zeta, psi_n_sorted[idx] / np.sqrt(h) + offset, label=f"$E_{{{idx}}}$={En_sorted[idx]:3.1f}")
+
+plt.ylim((-5, 5 + 30 * separation))  # Adjust y-limits based on separation
+plt.legend(loc='upper right', bbox_to_anchor=(1.2, 1), title="Energies (bottom to top)")  # Adjust legend location and order
+plt.savefig("Eigenfunctions_First_30_Sorted_Reversed.jpg")
+plt.show()
+
+#############
+#############
+#############
+#############
+#The fourth program plots Figures 6-9 by selecting a suitable starting index (i) to #run.
+
+import math
+import numpy as np
+import scipy.integrate as integrate
+import scipy.special as special
+from numpy import linalg as LA
+from matplotlib import pyplot as plt
+import numpy.polynomial.hermite as Herm
+import matplotlib.pyplot as plt
+import scipy.integrate as integrate
+
+plt.rcParams.update({'font.size': 22})
+hbar = 1 
+m = 1    
+N = 2500
+L = 3.0
+x = np.linspace(-L/2, L/2., N)
+h = x[1] - x[0]
+hh = 70.0
+cc = np.sqrt(hh)
+bb = 0
+aa = 300
+
+Vnew = 8065.73 * ((hh * np.tan(x)**2 + cc * (np.sin(x) / (np.cos(x)**2)) -
+        bb * (np.sin(x)**2) + aa * np.sin(x) + 830.0) / 900) - 6000
+
+Mdd = 1./(h*h) * (np.diag(np.ones(N-1), -1) - 2 * np.diag(np.ones(N), 0) + np.diag(np.ones(N-1), 1))
+H = -(hbar * hbar) / (2.0 * m) * Mdd + np.diag(Vnew) 
+En, psi_nT = np.linalg.eigh(H)
+psi_n = np.transpose(psi_nT)
+norm2 = LA.norm(psi_nT * psi_n)
+
+Vfit = 8065.73 * (-4464.49 + (0.429 * x) - (1.123 * x**2) - (0.143 * x**3) + (0.563 * x**4)) + (3.601 * 10**7) + 6200
+Mdd = 1./(h*h) * (np.diag(np.ones(N-1), -1) - 2 * np.diag(np.ones(N), 0) + np.diag(np.ones(N-1), 1))
+H = -(hbar * hbar) / (2.0 * m) * Mdd + np.diag(Vfit)
+En, psiT = np.linalg.eigh(H)
+psi = np.transpose(psiT)
+norm4 = LA.norm(psiT * psi)
+
+product = np.zeros(100)
+for i in range(0, 100):
+    product[i] += np.dot(psi[1], psi_n[i])
+
+for r in product:
+    print(r**2)
+
+sum = 0
+for i in range(0, 100):
+    sum = sum + (product[i])**2
+print("sum=", sum)
+print(product**2)
+
+n = np.linspace(0, 100, 100)
+fig2 = plt.figure(figsize=[12, 8])
+plt.ylabel('$probability$')
+plt.xlabel('$n-states$')
+plt.ylim((0, 0.25))
+plt.xlim((0, 25))
+plt.plot(n, product**2, 'purple')
+plt.plot(n, product**2, 'o')
+plt.legend()
+plt.savefig("probability3.jpg")
+plt.show()
+\end{lstlisting}
+
+
+% if have a single appendix:
+%\appendix[Proof of the Zonklar Equations]
+% or
+%\appendix  % for no appendix heading
+% do not use \section anymore after \appendix, only \section*
+% is possibly needed
+
+% use appendices with more than one appendix
+% then use \section to start each appendix
+% you must declare a \section before using any
+% \subsection or using \label (\appendices by itself
+% starts a section numbered zero.)
+%
+
+
+%\appendices
+%\section{Proof of the First Zonklar Equation}
+%Appendix one text goes here.
+
+% you can choose not to have a title for an appendix
+% if you want by leaving the argument blank
+%\section{}
+
+
+% use section* for acknowledgement
+%\section*{Acknowledgment}
+
+
+
+
+
+% Can use something like this to put references on a page
+% by themselves when using endfloat and the captionsoff option.
+%\ifCLASSOPTIONcaptionsoff
+  \newpage
+
+
+
+
+% trigger a \newpage just before the given reference
+% number - used to balance the columns on the last page
+% adjust value as needed - may need to be readjusted if
+% the document is modified later
+%\IEEEtriggeratref{8}
+% The "triggered" command can be changed if desired:
+%\IEEEtriggercmd{\enlargethispage{-5in}}
