@@ -126,6 +126,8 @@ plt.show()
 #########
 #########
 #########
+#The second program plots the first thirty eigenfunctions."
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -192,7 +194,7 @@ plt.show()
 ###########
 ###########
 ###########
-##The second program plots the first thirty eigenfunctions."
+##The Third  program plots the eigen values between 26-60."
 #####
 import math
 import numpy as np
@@ -271,7 +273,7 @@ plt.show()
 ######
 ######
 
-##The third program plots the first thirty eigenfunctions during the non-adiabatic process.
+##The fourth program plots the first thirty eigenfunctions during the non-adiabatic process.
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
@@ -351,7 +353,7 @@ plt.show()
 #############
 #############
 #############
-#The fourth program plots Figures 6-9 by selecting a suitable starting index (i) to #run.
+#The fifth program plots Figures 6-9 by selecting a suitable starting index (i) to #run.
 
 import math
 import numpy as np
@@ -418,49 +420,7 @@ plt.show()
 \end{lstlisting}
 
 
-% if have a single appendix:
-%\appendix[Proof of the Zonklar Equations]
-% or
-%\appendix  % for no appendix heading
-% do not use \section anymore after \appendix, only \section*
-% is possibly needed
-
-% use appendices with more than one appendix
-% then use \section to start each appendix
-% you must declare a \section before using any
-% \subsection or using \label (\appendices by itself
-% starts a section numbered zero.)
-%
-
-
-%\appendices
-%\section{Proof of the First Zonklar Equation}
-%Appendix one text goes here.
-
-% you can choose not to have a title for an appendix
-% if you want by leaving the argument blank
-%\section{}
-
-
-% use section* for acknowledgement
-%\section*{Acknowledgment}
 
 
 
 
-
-% Can use something like this to put references on a page
-% by themselves when using endfloat and the captionsoff option.
-%\ifCLASSOPTIONcaptionsoff
-  \newpage
-
-
-
-
-% trigger a \newpage just before the given reference
-% number - used to balance the columns on the last page
-% adjust value as needed - may need to be readjusted if
-% the document is modified later
-%\IEEEtriggeratref{8}
-% The "triggered" command can be changed if desired:
-%\IEEEtriggercmd{\enlargethispage{-5in}}
